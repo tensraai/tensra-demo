@@ -110,9 +110,19 @@ export default function Home() {
   const es = useRef<EventSource | null>(null);
   const logEnd = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setRunId("run-" + Math.random().toString(36).slice(2, 10)), []);
-  useEffect(() => () => es.current?.close(), []);
-  useEffect(() => logEnd.current?.scrollIntoView?.({ block: "nearest" }), [events]);
+  // Effects use block bodies on purpose: React treats any returned value as a cleanup function,
+  // and some browsers return a value from scrollIntoView, which crashes production builds.
+  useEffect(() => {
+    setRunId("run-" + Math.random().toString(36).slice(2, 10));
+  }, []);
+  useEffect(() => {
+    return () => {
+      es.current?.close();
+    };
+  }, []);
+  useEffect(() => {
+    logEnd.current?.scrollIntoView?.({ block: "nearest" });
+  }, [events]);
 
   const api = useCallback(
     async (path: string, method: string, body?: unknown) => {
